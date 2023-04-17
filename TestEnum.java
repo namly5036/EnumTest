@@ -1,5 +1,6 @@
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -7,10 +8,19 @@ import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
+@FunctionalInterface
+interface MyInterface {
+    void run();
+}
+
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public enum TestEnum {
-    TYPE1("1", "Additional1") {
+public enum TestEnum implements MyInterface{
+    TYPE1("1", "Additional1", Integer::sum) {
+        @Override
+        public void run() {
+            System.out.println("Run TYPE1");
+        }
         @Override
         public int build(final String input) {
             if (NumberUtils.isDigits(input)) {
@@ -18,13 +28,13 @@ public enum TestEnum {
             }
             return -1;
         }
-
-        @Override
-        public String parse(final int input) {
-            return input + "YYYYY";
-        }
     },
-    TYPE2("2", "Additional2") {
+    TYPE2("2", "Additional2", (x, y) -> x + y * 2) {
+        @Override
+        public void run() {
+            System.out.println("Run TYPE2");
+        }
+
         @Override
         public int build(final String input) {
             if (NumberUtils.isDigits(input)) {
@@ -32,21 +42,14 @@ public enum TestEnum {
             }
             return -1;
         }
-
-        @Override
-        public String parse(final int input) {
-            return input + "XXXXX";
-        }
     };
-
     private final String code;
-
     private final String description;
-
+    private final BiFunction<Integer, Integer, Integer> operation;
+    public int apply(final int x, final int y) {
+        return this.operation.apply(x, y);
+    }
     public abstract int build(final String source);
-
-    public abstract String parse(final int source);
-
     public static Optional<TestEnum> findByName(final String input) {
         return Optional.ofNullable(input)
                 .map(StringUtils::isNotBlank)
@@ -72,15 +75,17 @@ public enum TestEnum {
                     switch (enumVal) {
                         case TYPE1:
                             int buildResult = TYPE1.build("2");
-                            String parseResult = TYPE1.parse(10);
+                            int applyResult = TYPE1.apply(1, 2);
+                            TYPE1.run();
                             System.out.println("buildResult1 = " + buildResult);
-                            System.out.println("parseResult1 = " + parseResult);
+                            System.out.println("applyResult = " + applyResult);
                             break;
                         case TYPE2:
-                            buildResult = TYPE2.build("3");
-                            parseResult = TYPE2.parse(20);
+                            buildResult = TYPE2.build("2");
+                            applyResult = TYPE1.apply(1, 2);
+                            TYPE2.run();
                             System.out.println("buildResult2 = " + buildResult);
-                            System.out.println("parseResult2 = " + parseResult);
+                            System.out.println("applyResult = " + applyResult);
                             break;
                         default:
                             break;
